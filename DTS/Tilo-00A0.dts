@@ -1,0 +1,83 @@
+   /*
+    * +------------------------------------------------------------------------------------------------------------------------------+
+    * |                                                   TERMS OF USE: MIT License                                                  |
+    * +------------------------------------------------------------------------------------------------------------------------------|
+    * |Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation    |
+    * |files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,    |
+    * |modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software|
+    * |is furnished to do so, subject to the following conditions:                                                                   |
+    * |                                                                                                                              |
+    * |The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.|
+    * |                                                                                                                              |
+    * |THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE          |
+    * |WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR         |
+    * |COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,   |
+    * |ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                         |
+    * +------------------------------------------------------------------------------------------------------------------------------+
+    *
+    * An overlay for the Beaglebone Black so that the pins used by the PRU1_StepperIO.p
+    * PASM Assembly language program in the TiloClient project will appear
+    * on the P8 and P9 headers
+    *
+    * WARNING: This overlay assumes the Beaglebone Black is running headless and 
+    * off a microSD card without eMMC memory enabled. The PinMux configuration in
+    * this overlay will interfere with both of these sub-systems.
+    *
+    * Compile this overlay with the following command (as root)
+    *    dtc -W no-unit_address_vs_reg -O dtb -o Tilo-00A0.dtbo -b 0 -@ Tilo-00A0.dts
+    * Place it in the /lib/firmware directory
+    *    cp Tilo-00A0.dtbo /lib/firmware/
+    * Edit the /boot/uEnv.txt file to reference the compiled overlay
+    *    ###Additional custom capes
+    *    uboot_overlay_addr4=/lib/firmware/Tilo-00A0.dtbo
+    * Reboot
+    *    reboot now
+    *
+    * Tilo Project: http://www.OfItselfSo.com/Tilo
+    *
+    * Derived from Derek Molloys example on www.derekmolloy.ie
+    */
+
+    /dts-v1/;
+    /plugin/;
+
+    /{
+        compatible = "ti,beaglebone", "ti,beaglebone-black";
+        part-number = "Tilo-00A0";
+        version = "00A0";
+        fragment@0 {
+            target = <&am33xx_pinmux>;
+            __overlay__ {
+                pinctrl_test: TiloPRU0OutputPins {
+                    pinctrl-single,pins = <
+                        0x0A0 0x25  /* P8_45 70   OUTPUT MODE5 - pr1_pru1_pru_r30_0 STEP0 Pulse*/
+                        0x0A4 0x25  /* P8_46 71   OUTPUT MODE5 - pr1_pru1_pru_r30_1 STEP0 Dir*/
+                        0x0A8 0x25  /* P8_43 72   OUTPUT MODE5 - pr1_pru1_pru_r30_2 STEP1 Pulse */
+                        0x0AC 0x25  /* P8_44 73   OUTPUT MODE5 - pr1_pru1_pru_r30_3 STEP1 Dir*/
+                        0x0B0 0x25  /* P8_41 74   OUTPUT MODE5 - pr1_pru1_pru_r30_4 STEP2 Pulse */
+                        0x0B4 0x25  /* P8_42 75   OUTPUT MODE5 - pr1_pru1_pru_r30_5 STEP2 Dir*/
+                        0x0B8 0x25  /* P8_39 74   OUTPUT MODE5 - pr1_pru1_pru_r30_6 STEP3 Pulse */
+                        0x0BC 0x25  /* P8_40 75   OUTPUT MODE5 - pr1_pru1_pru_r30_7 STEP3 Dir*/
+                        0x0E4 0x25  /* P8_29 87   OUTPUT MODE5 - pr1_pru1_pru_r30_9 STEP4 Pulse */
+                        0x0EC 0x25  /* P8_30 89   OUTPUT MODE5 - pr1_pru1_pru_r30_11 STEP4 Dir*/
+                        0x0E0 0x25  /* P8_27 86   OUTPUT MODE5 - pr1_pru1_pru_r30_8 STEP5 Pulse */
+                        0x0E8 0x25  /* P8_28 88   OUTPUT MODE5 - pr1_pru1_pru_r30_10 STEP5 Dir*/
+                        /* OUTPUT  GPIO(mode7) 0x07 pulldown, 0x17 pullup, 0x?f no pullup/down */
+                        /* INPUT   GPIO(mode7) 0x27 pulldown, 0x37 pullup, 0x?f no pullup/down */
+                    >;
+                };
+            };
+        };
+
+        fragment@1 {
+            target = <&ocp>;
+            __overlay__ {
+                test_helper: helper {
+                    compatible = "bone-pinmux-helper";
+                    pinctrl-names = "default";
+                    pinctrl-0 = <&pinctrl_test>;
+                    status = "okay";
+                };
+            };
+        };
+    };
